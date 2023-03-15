@@ -1,0 +1,27 @@
+{
+  "name": "whatsapp-integration",
+  "version": "1.0.0",
+  "description": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc && node ./dist/index.js",
+    "clean": "rimraf dist"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "node-fetch": "^3.3.1",
+    "openai": "^3.2.1",
+    "qrcode-terminal": "^0.12.0",
+    "rimraf": "^4.4.0",
+    "typescript": "^4.9.5",
+    "whatsapp-web.js": "^1.19.4"
+  },
+  "devDependencies": {
+    "@types/qrcode-terminal": "^0.12.0"
+  }
+}
