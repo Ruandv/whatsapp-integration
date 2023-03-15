@@ -3,7 +3,23 @@
 Whatsapp-Integration is a nodejs application that will monitor incomming whatsapp messages and respond accordingly.
 It integrates loadshedding schedules for South Africa (work in progress) and also ChatGPT if your message does not relate to loadshedding.
 
+## Pre-requisites
+
+You need to generate two api tokens:
+
+**ChatGPT** : <https://platform.openai.com/>
+
+**Eskom se Push** : <https://eskomsepush.gumroad.com/l/api>
+
 ## Installation
+
+create an .env file by running this script
+
+```bash
+cp .env.example ./.env
+```
+
+Replace the `YOUR_KEY` with the keys you received when registering on the two websites.
 
 Use the yarn package manager [yarn](https://yarnpkg.com/) to install all the dependencies.
 
