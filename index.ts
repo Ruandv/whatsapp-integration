@@ -37,8 +37,8 @@ client.on('message', async (message:any) => {
 
         }
         else {
-            if (message.body.startsWith("#") || message.body.toLocaleLowerCase().startsWith("welcome")) {
-                if (message.body.toLocaleLowerCase().indexOf("loadshedding") > 0 || message.body.toLocaleLowerCase().indexOf("bold") > 0) {
+            if (message.body.startsWith("#")) {
+                if (message.body.toLocaleLowerCase().indexOf("loadshedding") > 0) {
                     var x = await getLoadsheddingInfo();
                     message.reply(x)
                 }
@@ -57,8 +57,11 @@ async function runCompletion(message:any) {
     const completion = await openai.createCompletion({
         model: "text-davinci-003",
         prompt: message,
-        max_tokens: 200,
+        max_tokens: 500,
     });
+    completion.data.choices.forEach(r=>{
+        console.log(JSON.stringify(r));
+    })
     return completion.data.choices[0].text;
 }
 
