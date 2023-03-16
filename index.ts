@@ -1,7 +1,7 @@
-import { Client, LocalAuth } from 'whatsapp-web.js';
+import { Chat, Client, LocalAuth } from 'whatsapp-web.js';
 import qrcode from 'qrcode-terminal';
-import dotenv from 'dotenv';
 import GptWrapper from './gpt.wrapper';
+import dotenv from 'dotenv';
 dotenv.config();
 
 var https = require('follow-redirects').https;
@@ -10,48 +10,56 @@ const gpt = new GptWrapper();
 
 const waClient = new Client({
     authStrategy: new LocalAuth({ clientId: "client-one" }),
-    puppeteer: { headless: process.env.IS_HEADLESS?.toLowerCase()==="true" }
+    puppeteer: { headless: process.env.IS_HEADLESS?.toLowerCase() === "true" }
 });
 
-waClient.on('qr', (qr:any) => {
+waClient.on('qr', (qr: any) => {
     qrcode.generate(qr, { small: true });
 });
 
-waClient.on('ready', () => {
+waClient.on('ready', async () => {
     console.log('Client is ready!');
 });
 
 waClient.initialize();
 
-waClient.on('message', async (message:any) => {
-    // console.log('MESSAGE RECEIVED', message);
-    let chat = await message.getChat();
+waClient.on('message', async (message: any) => {
+    let chat: Chat = await message.getChat();
     if (chat.isGroup) {
         console.log("THIS IS A GROUP");
+        gpt.runCompletion(message.body.trim()).then(result => {
+            console.log(`${chat.id.user} : ${message.body}`);
+            console.log("Response : " + result);
+            console.log("'\r\n------------------------------------------------------")
+        });
     }
     else {
         if (message.isStatus) {
 
         }
         else {
-            if (message.body.startsWith("#")) {
-                if (message.body.toLocaleLowerCase().indexOf("loadshedding") > 0) {
-                    var x = await getLoadsheddingInfo();
-                    message.reply(x)
-                }
-                else {
-                    gpt.runCompletion(message.body.substring(1)).then(result => {
-                        console.log("Response : " + result);
-                        message.reply(result)
-                    });
-                }
+            if (message.body.toLocaleLowerCase().indexOf("loadshedding") > 0) {
+                var x = await getLoadsheddingInfo();
+                message.reply(x)
+            }
+            else {
+                gpt.runCompletion(message.body.trim()).then(result => {
+                    console.log(`${chat.id.user} : ${message.body}`);
+                    console.log("Response : " + result);
+                    console.log("'\r\n------------------------------------------------------")
+                    if (process.env.ALLOWED_RESPONSES!.split(",").indexOf(chat.id.user) >=0 ) {
+                        //message.reply(result);
+                        //waClient.sendMessage("27834545355@c.us", result!)
+                        console.log(result);
+                    }
+                });
             }
         }
     }
 });
 
 
-async function getLoadsheddingInfo():Promise<string> {
+async function getLoadsheddingInfo(): Promise<string> {
     return new Promise((resolve, reject) => {
         var msg = '𝙏𝙝𝙞𝙨 𝙞𝙨 𝙩𝙝𝙚 𝙨𝙘𝙝𝙚𝙙𝙪𝙡𝙚 𝙛𝙤𝙧 𝘽𝙚𝙧𝙜𝙗𝙧𝙤𝙣(15)\r\n';
         var options = {
@@ -64,10 +72,10 @@ async function getLoadsheddingInfo():Promise<string> {
             'maxRedirects': 20
         };
 
-        const req = https.request(options, function (res:any) {
-            var chunks:any = [];
+        const req = https.request(options, function (res: any) {
+            var chunks: any = [];
 
-            res.on("data", function (chunk:any) {
+            res.on("data", function (chunk: any) {
                 chunks.push(chunk);
             });
 
@@ -76,7 +84,7 @@ async function getLoadsheddingInfo():Promise<string> {
                 var bergbron = JSON.parse(body.toString())
                 var busyWithDate = new Date();
                 msg += `\r\n--- ${busyWithDate.toLocaleDateString()} ---`;
-                bergbron.events.forEach((e:any) => {
+                bergbron.events.forEach((e: any) => {
                     var startTime = new Date(e.start);
                     var endTime = new Date(e.end);
 
@@ -89,7 +97,7 @@ async function getLoadsheddingInfo():Promise<string> {
                 resolve(msg);
             });
 
-            res.on("error", function (error:any) {
+            res.on("error", function (error: any) {
                 reject(error);
             });
         });
