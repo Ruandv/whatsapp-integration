@@ -1,32 +1,29 @@
 import { Client, LocalAuth } from 'whatsapp-web.js';
 import qrcode from 'qrcode-terminal';
-import { Configuration, OpenAIApi } from "openai";
 import dotenv from 'dotenv';
+import GptWrapper from './gpt.wrapper';
 dotenv.config();
 
 var https = require('follow-redirects').https;
-const client = new Client({
+
+const gpt = new GptWrapper();
+
+const waClient = new Client({
     authStrategy: new LocalAuth({ clientId: "client-one" }),
     puppeteer: { headless: process.env.IS_HEADLESS?.toLowerCase()==="true" }
 });
 
-client.on('qr', (qr:any) => {
+waClient.on('qr', (qr:any) => {
     qrcode.generate(qr, { small: true });
 });
 
-client.on('ready', () => {
+waClient.on('ready', () => {
     console.log('Client is ready!');
 });
 
-client.initialize();
+waClient.initialize();
 
-const configuration:any = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
-});
-
-const openai = new OpenAIApi(configuration);
-
-client.on('message', async (message:any) => {
+waClient.on('message', async (message:any) => {
     // console.log('MESSAGE RECEIVED', message);
     let chat = await message.getChat();
     if (chat.isGroup) {
@@ -43,7 +40,7 @@ client.on('message', async (message:any) => {
                     message.reply(x)
                 }
                 else {
-                    runCompletion(message.body.substring(1)).then(result => {
+                    gpt.runCompletion(message.body.substring(1)).then(result => {
                         console.log("Response : " + result);
                         message.reply(result)
                     });
@@ -53,17 +50,6 @@ client.on('message', async (message:any) => {
     }
 });
 
-async function runCompletion(message:any) {
-    const completion = await openai.createCompletion({
-        model: "text-davinci-003",
-        prompt: message,
-        max_tokens: 500,
-    });
-    completion.data.choices.forEach(r=>{
-        console.log(JSON.stringify(r));
-    })
-    return completion.data.choices[0].text;
-}
 
 async function getLoadsheddingInfo():Promise<string> {
     return new Promise((resolve, reject) => {
