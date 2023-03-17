@@ -19,6 +19,7 @@ waClient.on('qr', (qr: any) => {
 
 waClient.on('ready', async () => {
     console.log('Client is ready!');
+    gpt.initialize(process.env.SCENE!)
 });
 
 waClient.initialize();
@@ -40,7 +41,7 @@ waClient.on('message', async (message: any) => {
         else {
             if (message.body.toLocaleLowerCase().indexOf("loadshedding") > 0) {
                 var x = await getLoadsheddingInfo();
-                message.reply(x)
+                //message.reply(x)
             }
             else {
                 gpt.runCompletion(message.body.trim()).then(result => {
@@ -49,8 +50,7 @@ waClient.on('message', async (message: any) => {
                     console.log("'\r\n------------------------------------------------------")
                     if (process.env.ALLOWED_RESPONSES!.split(",").indexOf(chat.id.user) >=0 ) {
                         //message.reply(result);
-                        //waClient.sendMessage("27834545355@c.us", result!)
-                        console.log(result);
+                        waClient.sendMessage("27834545355@c.us", result!)
                     }
                 });
             }
@@ -59,7 +59,7 @@ waClient.on('message', async (message: any) => {
 });
 
 
-async function getLoadsheddingInfo(): Promise<string> {
+export async function getLoadsheddingInfo(): Promise<string> {
     return new Promise((resolve, reject) => {
         var msg = '𝙏𝙝𝙞𝙨 𝙞𝙨 𝙩𝙝𝙚 𝙨𝙘𝙝𝙚𝙙𝙪𝙡𝙚 𝙛𝙤𝙧 𝘽𝙚𝙧𝙜𝙗𝙧𝙤𝙣(15)\r\n';
         var options = {
@@ -105,3 +105,5 @@ async function getLoadsheddingInfo(): Promise<string> {
         req.end();
     });
 }
+
+export default{};

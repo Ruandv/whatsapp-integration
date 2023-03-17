@@ -8,7 +8,7 @@
     "build": "tsc",
     "start": "tsc && node ./dist/index.js",
     "clean": "rimraf dist",
-    "test": "jest"
+    "test": "jest --coverage"
   },
   "keywords": [],
   "author": "",

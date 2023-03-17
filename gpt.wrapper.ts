@@ -36,7 +36,7 @@ export default class GptWrapper {
             this._messages += completion.data.choices[0].text! + "[eol]"
             return completion.data.choices[0].text;
         } catch (e) {
-            debugger;
+            throw(e)
         }
     }
 }
