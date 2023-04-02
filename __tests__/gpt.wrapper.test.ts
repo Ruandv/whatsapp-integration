@@ -15,7 +15,7 @@ describe('gpt success', () => {
       "are you always responding in afrikaans.",
       "can you login on your gmail account"].map(
         async (query) => {
-          var res = await c.runCompletion(query)
+          var res = await c.runChat(query,'000')
           expect(res).toBeTruthy();
         })).then(x => {
 
@@ -28,7 +28,7 @@ describe('gpt success', () => {
 
     await Promise.all(["This will fail"].map(
       async (query) => {
-        var res = await myC.runCompletion(query)
+        var res = await myC.runCompletion(query,"000")
         expect(res).toBeTruthy();
       }))
       .then(x => { })
@@ -44,7 +44,7 @@ describe('gpt Fail', () => {
     await Promise.all([
       "can you login on your gmail account"].map(
         async (query) => {
-          expect(await c.runCompletion(query)).toBeFalsy()
+          expect(await c.runChat(query,"000")).toBeFalsy()
         })).then(x => {
 
         })

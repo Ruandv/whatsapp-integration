@@ -27,30 +27,29 @@ waClient.initialize();
 waClient.on('message', async (message: any) => {
     let chat: Chat = await message.getChat();
     if (chat.isGroup) {
-        console.log("THIS IS A GROUP");
-        gpt.runCompletion(message.body.trim()).then(result => {
-            console.log(`${chat.id.user} : ${message.body}`);
-            console.log("Response : " + result);
-            console.log("'\r\n------------------------------------------------------")
-        });
+        if (message.body.toLocaleLowerCase().indexOf("Loadshedding for Bergbron") > 0) {
+            gpt.runCompletion(message.body.trim(), chat.id.user).then(async result => {
+                var res: any = JSON.parse(result.trim())
+                var x = await getLoadsheddingInfo(res.area, res.blockId, res.nextSchedule);
+            });
+        }
     }
     else {
         if (message.isStatus) {
 
         }
         else {
-            if (message.body.toLocaleLowerCase().indexOf("loadshedding") > 0) {
-                var x = await getLoadsheddingInfo();
-                //message.reply(x)
+            if (message.body.toLocaleLowerCase().indexOf("loadshedding schedule") > 0) {
+                gpt.runCompletion(message.body.trim(), chat.id.user).then(async (result: string) => {
+                    var res: any = JSON.parse(result.trim())
+                    var x = await getLoadsheddingInfo(res.area, res.blockId, res.nextSchedule);
+                    waClient.sendMessage(chat.id.user+"@c.us", x)
+                });
             }
             else {
-                gpt.runCompletion(message.body.trim()).then(result => {
-                    console.log(`${chat.id.user} : ${message.body}`);
-                    console.log("Response : " + result);
-                    console.log("'\r\n------------------------------------------------------")
-                    if (process.env.ALLOWED_RESPONSES!.split(",").indexOf(chat.id.user) >=0 ) {
-                        //message.reply(result);
-                        waClient.sendMessage("27834545355@c.us", result!)
+                gpt.callNode(message.body.trim(), chat.id.user).then(result => {
+                    if (process.env.ALLOWED_RESPONSES!.split(",").indexOf(chat.id.user) >= 0) {
+                        waClient.sendMessage(chat.id.user+"@c.us", (result as any).toString())
                     }
                 });
             }
@@ -59,13 +58,13 @@ waClient.on('message', async (message: any) => {
 });
 
 
-export async function getLoadsheddingInfo(): Promise<string> {
+export async function getLoadsheddingInfo(area: string, blockId: string,nextSchedule:boolean): Promise<string> {
     return new Promise((resolve, reject) => {
-        var msg = '𝙏𝙝𝙞𝙨 𝙞𝙨 𝙩𝙝𝙚 𝙨𝙘𝙝𝙚𝙙𝙪𝙡𝙚 𝙛𝙤𝙧 𝘽𝙚𝙧𝙜𝙗𝙧𝙤𝙣(15)\r\n';
+        var msg = `𝙏𝙝𝙞𝙨 𝙞𝙨 𝙩𝙝𝙚 𝙨𝙘𝙝𝙚𝙙𝙪𝙡𝙚 𝙛𝙤𝙧 ${area.toUpperCase()}(${blockId})\r\n`;
         var options = {
             'method': 'GET',
             'hostname': 'developer.sepush.co.za',
-            'path': '/business/2.0/area?id=jhbcitypower2-15-bergbron&test=future',
+            'path': `/business/2.0/area?id=jhbcitypower2-${blockId}-${area}`,
             'headers': {
                 'token': process.env.ESP_API_KEY
             },
@@ -106,4 +105,4 @@ export async function getLoadsheddingInfo(): Promise<string> {
     });
 }
 
-export default{};
+export default {};

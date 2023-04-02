@@ -44,6 +44,8 @@ jspm_packages/
 # TypeScript v1 declaration files
 typings/
 
+history/
+
 # TypeScript cache
 *.tsbuildinfo
 
@@ -105,3 +107,5 @@ dist
 
 # Whatsapp Web
 .wwebjs_auth
+
+.deployment
