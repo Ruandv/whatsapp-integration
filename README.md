@@ -21,6 +21,8 @@ cp .env.example ./.env
 
 Replace the `YOUR_KEY` with the keys you received when registering on the two websites.
 
+The `APIKEY` value is what gets passed to the `gptintegration.azurewebsites.net` azure site for varification.
+
 Use the yarn package manager [yarn](https://yarnpkg.com/) to install all the dependencies.
 
 Install the dependencies

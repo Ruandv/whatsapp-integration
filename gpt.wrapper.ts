@@ -64,6 +64,7 @@ export default class GptWrapper {
             throw (e)
         }
     }
+
     runChat = async (message: string, userId: string) => {
         if (!this._scene || !this._openai) {
             throw ("Please call initialize before you call this method");
