@@ -108,6 +108,8 @@ export default class GptWrapper {
         }
     }
 
+    /* This is a custom call that first goes to an azure site and do some processing
+    on the server before returning */
     callNode = async (message: string, userId: string) => {
         var data = JSON.stringify({ message, userId, 'prompt': message });
 
