@@ -2,6 +2,8 @@ import { ChatCompletionRequestMessage, Configuration, CreateChatCompletionReques
 import https from 'https';
 
 import fs from 'fs';
+import { ChatCompletionRequestMessage_V2 } from "./models/ChatCompletionRequestMessage_V2";
+import { getTokens } from "./tokenizer";
 export default class GptWrapper {
     private _openai: OpenAIApi | undefined;
     private _scene: string | undefined;
@@ -18,6 +20,17 @@ export default class GptWrapper {
         fs.stat('./history', async (err, stats) => {
             if (err) {
                 fs.mkdir("./history", () => { })
+            } else {
+                if (stats.isDirectory()) {
+                    console.log('Directory exists!');
+                } else {
+                    console.log('Not a directory!');
+                }
+            }
+        });
+        fs.stat('./downloads', async (err, stats) => {
+            if (err) {
+                fs.mkdir("./downloads", () => { })
             } else {
                 if (stats.isDirectory()) {
                     console.log('Directory exists!');
@@ -55,10 +68,11 @@ export default class GptWrapper {
             if (!completion.data.choices) {
             }
             else {
+                debugger;
                 jsMessages.push(completion.data.choices[completion.data.choices.length - 1].text!);
             }
             //save the file
-            fs.writeFileSync(historyFileName, JSON.stringify(jsMessages))
+            fs.writeFileSync(historyFileName, JSON.stringify(jsMessages, null, 4))
             return jsMessages[jsMessages.length - 1].replace(this._stopCharacters, "");
         } catch (e) {
             throw (e)
@@ -70,38 +84,39 @@ export default class GptWrapper {
             throw ("Please call initialize before you call this method");
         }
 
-        var msg: ChatCompletionRequestMessage = { role: "user", content: message + "\r" };
+        var msg: ChatCompletionRequestMessage_V2 = { role: "user", content: message + "\r", tokenSize: getTokens(message) };
         // load this users history...
         var historyFileName = "./history/chat_" + userId + ".json";
         if (!fs.existsSync(historyFileName)) {
-            fs.writeFileSync(historyFileName, `[{\"role\":\"system\",\"content\":\"${process.env.SCENE}\"}]`);
+            fs.writeFileSync(historyFileName, `[{\"role\":\"system\",\"content\":\"${process.env.SCENE}\",\"tokenSize\":\"${getTokens(process.env.SCENE!)}\"}]`);
         }
         var myFile = fs.readFileSync(historyFileName, "utf-8");
         //parse it to json
-        var jsMessages: Array<ChatCompletionRequestMessage> = new Array<ChatCompletionRequestMessage>();
+        var jsMessages: Array<ChatCompletionRequestMessage_V2> = new Array<ChatCompletionRequestMessage_V2>();
         jsMessages = JSON.parse(myFile.trim())
 
-        var msg: ChatCompletionRequestMessage = { role: "user", content: message };
         jsMessages.push(msg);
+        var jsMessages2: Array<ChatCompletionRequestMessage> = [];
+        jsMessages.forEach((element: ChatCompletionRequestMessage) => {
+            jsMessages2.push({ 'content': element.content,'role': element.role })
+        });
+
         try {
             var req = {
-                model: "curie:ft-personal-2023-03-19-05-07-05",
-                messages: jsMessages,
-                temperature: 0.9,
-                stop: ["\r"],
+                model: "gpt-3.5-turbo-0301",
+                messages: jsMessages2,
                 stream: false,
-            } as CreateChatCompletionRequest;
+            } as unknown as CreateChatCompletionRequest;
 
             const completion = await this._openai.createChatCompletion(req);
-            msg = { role: "assistant", content: "" };
             if (!completion.data.choices[0].message) {
             }
             else {
-                msg = completion.data.choices[0].message;
+                msg = { ...completion.data.choices[0].message, tokenSize: getTokens(completion.data.choices[0].message.content) };
             }
             jsMessages.push(msg)
             //save the file
-            fs.writeFileSync(historyFileName, JSON.stringify(jsMessages))
+            fs.writeFileSync(historyFileName, JSON.stringify(jsMessages, null, 4))
             return msg.content;
         } catch (e) {
             throw (e)
@@ -110,13 +125,13 @@ export default class GptWrapper {
 
     /* This is a custom call that first goes to an azure site and do some processing
     on the server before returning */
-    callNode = async (message: string, userId: string) => {
+    callNode = async (message: string, userId: string): Promise<string> => {
         var data = JSON.stringify({ message, userId, 'prompt': message });
 
         const options = {
             hostname: 'gptintegration.azurewebsites.net',
             port: 443,
-            path: '/api/gpt/complete',
+            path: '/api/gpt/chatComplete',
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -124,7 +139,7 @@ export default class GptWrapper {
             }
         };
 
-        return new Promise(async (resolve, reject) => {
+        return new Promise<string>(async (resolve, reject) => {
             var req = await https.request(options, (res) => {
                 console.log(`statusCode: ${res.statusCode}`);
                 let responseData = '';
