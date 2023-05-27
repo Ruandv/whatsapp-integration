@@ -45,6 +45,8 @@ jspm_packages/
 typings/
 
 history/
+downloads/
+images/
 
 # TypeScript cache
 *.tsbuildinfo
